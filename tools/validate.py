@@ -25,8 +25,16 @@ REQUIRED_FIELDS = {
     "threshold": ["feature", "value"],
     "interaction": ["features"],
     "derived_feature": ["features", "form"],
-    "decision_rule": ["condition", "outcome"],
-    "failure_region": ["condition", "observed"],
+    "decision_rule": ["category", "feature", "value", "outcome"],
+    "failure_region": ["category", "feature", "observed"],
+}
+# Values that must come from a fixed vocabulary. Prose is not scoreable - claims are
+# matched on their fields, so "it goes up a lot" has to become direction="increases".
+ENUM_FIELDS = {
+    "direction": {"increases", "decreases", "non_monotonic", "none"},
+    "form": {"ratio", "product", "difference", "sum", "binned", "other"},
+    "outcome": {"approve", "decline", "override", "no_change"},
+    "observed": {"constant", "inverted", "unstable", "extrapolated", "saturated"},
 }
 
 errors, warnings = [], []
@@ -88,22 +96,40 @@ def check_round(name):
         for f in REQUIRED_FIELDS.get(ctype, []):
             if f not in c:
                 err(at, f"type '{ctype}' requires field '{f}'")
+        for f, allowed in ENUM_FIELDS.items():
+            if f in c and str(c[f]).strip().lower() not in allowed:
+                err(at, f"{f}='{c[f]}' is not one of {sorted(allowed)}")
 
     if not report.exists() or len(report.read_text().strip()) < 200:
         warn(name, "report.md is missing or very short — findings.json is scored, but the report is what judges read")
 
 
 def has_work(name):
+    """Has this round been started, or is it still the untouched starter file?
+
+    A fresh clone must validate cleanly, so an unedited starter — placeholder team ID
+    and the example claim still in place — counts as "not started" rather than as a
+    broken submission. Touch either one and the round starts being checked.
+    """
     d = ROOT / name
-    if not d.exists():
-        return False
     f = d / "findings.json"
-    if not f.exists():
+    if not d.exists() or not f.exists():
         return False
     try:
-        return bool(json.loads(f.read_text()).get("claims"))
+        data = json.loads(f.read_text())
     except Exception:
         return True  # malformed but present — check it and report properly
+    claims = data.get("claims") or []
+    if not claims:
+        return False
+    untouched = (
+        str(data.get("team", "")).upper().startswith("BB-XXX")
+        and len(claims) == 1
+        and "Replace this example claim" in str(
+            claims[0].get("evidence", {}).get("summary", "")
+        )
+    )
+    return not untouched
 
 
 targets = sys.argv[1:] or [r for r in ROUNDS if has_work(r)]

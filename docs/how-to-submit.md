@@ -76,8 +76,28 @@ more than an uncertain one. If you are not sure, say so — that is rewarded, no
 | `threshold` | A value where behaviour changes sharply | `feature`, `value` |
 | `interaction` | Two inputs that matter together | `features` |
 | `derived_feature` | Inputs combined before the model sees them | `features`, `form` |
-| `decision_rule` | A rule sitting on top of the model | `condition`, `outcome` |
-| `failure_region` | Where the system is confidently wrong | `condition`, `observed` |
+| `decision_rule` | A rule sitting on top of the model | `category`, `feature`, `value`, `outcome` |
+| `failure_region` | Where the system is confidently wrong | `category`, `feature`, `observed` |
+
+Four fields take fixed vocabularies, because prose cannot be scored automatically:
+
+| Field | Allowed values |
+|---|---|
+| `direction` | `increases` `decreases` `non_monotonic` `none` |
+| `form` | `ratio` `product` `difference` `sum` `binned` `other` |
+| `outcome` | `approve` `decline` `override` `no_change` |
+| `observed` | `constant` `inverted` `unstable` `extrapolated` `saturated` |
+
+A rule you noticed as *"applicants in region C under 25 always get declined"* is submitted as:
+
+```json
+{
+  "type": "decision_rule",
+  "category": "C", "feature": "age", "value": 25, "outcome": "decline",
+  "confidence": 0.85,
+  "evidence": { "query_ids": ["c01", "c02"], "summary": "..." }
+}
+```
 
 ## Rules that will cost you the event
 

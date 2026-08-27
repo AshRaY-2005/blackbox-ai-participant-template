@@ -1,19 +1,42 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "BLACKBOX AI 1.0 — round findings",
+  "title": "BLACKBOX AI 1.0 \u2014 round findings",
   "description": "Structured, checkable claims about the hidden system. This file is scored automatically. Your report.md carries the reasoning; this file carries the claims.",
   "type": "object",
-  "required": ["round", "team", "claims"],
+  "required": [
+    "round",
+    "team",
+    "claims"
+  ],
   "properties": {
-    "round":  { "type": "string", "enum": ["round-1","round-2","round-3","round-4","final"] },
-    "team":   { "type": "string", "description": "Your team ID, e.g. BB-017" },
-    "queries_used": { "type": "integer", "minimum": 0 },
+    "round": {
+      "type": "string",
+      "enum": [
+        "round-1",
+        "round-2",
+        "round-3",
+        "round-4",
+        "final"
+      ]
+    },
+    "team": {
+      "type": "string",
+      "description": "Your team ID, e.g. BB-017"
+    },
+    "queries_used": {
+      "type": "integer",
+      "minimum": 0
+    },
     "claims": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["type", "confidence", "evidence"],
+        "required": [
+          "type",
+          "confidence",
+          "evidence"
+        ],
         "properties": {
           "type": {
             "type": "string",
@@ -28,30 +51,103 @@
             ]
           },
           "confidence": {
-            "type": "number", "minimum": 0, "maximum": 1,
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
             "description": "How sure you are. A confident wrong claim costs more than an uncertain one."
           },
           "evidence": {
             "type": "object",
-            "required": ["summary"],
+            "required": [
+              "summary"
+            ],
             "properties": {
-              "query_ids": { "type": "array", "items": { "type": "string" } },
-              "summary":   { "type": "string", "minLength": 10 }
+              "query_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "summary": {
+                "type": "string",
+                "minLength": 10
+              }
             }
           },
-
-          "feature":   { "type": "string" },
-          "features":  { "type": "array", "items": { "type": "string" }, "minItems": 2 },
-          "direction": { "type": "string", "enum": ["increases","decreases","non_monotonic","none"] },
-          "strength":  { "type": "string", "enum": ["strong","moderate","weak"] },
-          "value":     { "type": "number" },
-          "tolerance": { "type": "number" },
-          "form":      { "type": "string", "enum": ["ratio","product","difference","sum","binned","other"] },
-          "condition": { "type": "string" },
-          "outcome":   { "type": "string" },
-          "observed":  { "type": "string" },
-          "expected":  { "type": "string" }
-        }
+          "feature": {
+            "type": "string"
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "increases",
+              "decreases",
+              "non_monotonic",
+              "none"
+            ]
+          },
+          "strength": {
+            "type": "string",
+            "enum": [
+              "strong",
+              "moderate",
+              "weak"
+            ]
+          },
+          "value": {
+            "type": "number"
+          },
+          "tolerance": {
+            "type": "number"
+          },
+          "form": {
+            "type": "string",
+            "enum": [
+              "ratio",
+              "product",
+              "difference",
+              "sum",
+              "binned",
+              "other"
+            ]
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "approve",
+              "decline",
+              "override",
+              "no_change"
+            ],
+            "description": "What the rule does when it fires."
+          },
+          "observed": {
+            "type": "string",
+            "enum": [
+              "constant",
+              "inverted",
+              "unstable",
+              "extrapolated",
+              "saturated"
+            ],
+            "description": "How the system misbehaves in this region."
+          },
+          "expected": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "description": "The categorical value a rule or region applies to, e.g. \"C\"."
+          }
+        },
+        "description": "Every field a claim type needs must be present - see docs/how-to-submit.md. Claims are matched on their fields, not on prose, so be specific."
       }
     }
   }
