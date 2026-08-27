@@ -6,13 +6,18 @@ Nothing here is secret — it just saves you writing auth boilerplate.
     from src.blackbox import Blackbox
 
     bb = Blackbox("http://<server>:8000", "BB-017", "your-password")
-    print(bb.quota())
+    print(bb.challenge())     # what your system looks like from outside
+    print(bb.quota())         # free - checking never costs a query
 
     # one row = one query. Batch to save time, not budget.
     out = bb.query([
         {"x1": 0.5, "x2": 0.2, "x3": 0.9},
         {"x1": 0.6, "x2": 0.2, "x3": 0.9},
     ])
+
+    # everything you have ever asked, back as rows. Also free.
+    import pandas as pd
+    df = pd.DataFrame(bb.export())
 """
 from __future__ import annotations
 
@@ -78,6 +83,22 @@ class Blackbox:
     def quota(self) -> dict:
         """limit / used / remaining. Free — does not cost a query."""
         return self._call("GET", "/quota")
+
+    def export(self) -> list[dict]:
+        """Every query your team has made, as flat rows. Free.
+
+        In round 4 your earlier queries ARE your training set, so this is how you
+        get it back - including anything a teammate ran on another laptop, and
+        anything from a session whose browser tab is long gone.
+
+            import pandas as pd
+            df = pd.DataFrame(bb.export())
+        """
+        return self._call("GET", "/queries/export")["queries"]
+
+    def leaderboard(self) -> list[dict]:
+        """Published standings. Empty until organisers publish a round."""
+        return self._call("GET", "/leaderboard")
 
     def query(self, rows: list[dict]) -> dict:
         """Send inputs to the black box.

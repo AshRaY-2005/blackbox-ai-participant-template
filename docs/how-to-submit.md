@@ -99,6 +99,26 @@ A rule you noticed as *"applicants in region C under 25 always get declined"* is
 }
 ```
 
+## Getting your data back
+
+Three endpoints cost nothing and do not touch your budget:
+
+```python
+bb.quota()        # limit / used / remaining
+bb.challenge()    # your system's input and output schema
+bb.export()       # every query your team has made, as flat rows
+```
+
+`export()` is the one to remember. Round 4 asks you to reconstruct the system from
+your own observations, and this returns all of them — across teammates, across
+laptops, across closed browser tabs.
+
+```python
+import pandas as pd
+df = pd.DataFrame(bb.export())
+df.to_csv("round-4/experiments/queries.csv", index=False)
+```
+
 ## Rules that will cost you the event
 
 - **Never commit your team password or token.** CI fails the PR if it sees one.

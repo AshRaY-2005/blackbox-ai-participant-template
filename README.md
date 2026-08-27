@@ -63,7 +63,14 @@ rows into a single request is faster, but costs exactly the same as sending them
 out does not reset it. When it is gone for a round, it is gone. Decide what an experiment
 is worth before you run it.
 
-**Checking your quota is free.** So is reading your challenge spec. Only `query()` costs.
+**Checking your quota is free.** So is reading your challenge spec, and so is
+`bb.export()` — which hands back every query your team has ever made, as rows.
+
+That last one matters more than it sounds. In Round 4 your earlier queries **are**
+your training set, and `export()` returns all of them: the ones a teammate ran on
+another laptop, and the ones from a browser tab you closed two hours ago. You do not
+have to build your own logging to survive Round 4 — though keeping your own notes
+about *why* you ran each experiment is still on you, and it is what judges read.
 
 **Your queries carry across rounds.** You keep the same black box from Round 1 through
 Round 4, so the data you collect early becomes your training set in Round 4. Careless
