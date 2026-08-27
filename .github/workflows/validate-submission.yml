@@ -1,0 +1,32 @@
+name: Validate submission
+
+# Pull requests only. Deliberately not on push — this repo is private and
+# Actions minutes on private repos are limited.
+on:
+  pull_request:
+    paths:
+      - 'round-*/**'
+      - 'final/**'
+      - 'tools/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate findings and structure
+        run: python tools/validate.py
+
+      - name: Check no credentials are committed
+        run: |
+          if git ls-files | grep -Ei '(^|/)(\.env|token\.txt|credentials)' ; then
+            echo "::error::Credential-looking files are tracked in this repo. Remove them before submitting."
+            exit 1
+          fi
+          echo "No credential files tracked."

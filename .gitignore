@@ -1,0 +1,27 @@
+# your own query data can get large — keep raw dumps out of the repo
+# unless they are part of a submission
+*.csv.gz
+*.parquet
+data/raw/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# models
+*.joblib
+*.pkl
+*.h5
+
+# credentials — NEVER commit your team password or token
+.env
+token.txt
+credentials*
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/

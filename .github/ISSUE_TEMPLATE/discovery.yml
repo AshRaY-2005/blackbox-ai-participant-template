@@ -1,0 +1,38 @@
+name: Discovery
+description: Something you have established about the hidden system.
+title: "[DISCOVERY] "
+labels: ["discovery"]
+body:
+  - type: markdown
+    attributes:
+      value: "Only open one of these once you have evidence. A discovery without reproducible evidence scores nothing."
+  - type: textarea
+    id: finding
+    attributes:
+      label: Finding
+      description: State it precisely. "Output drops sharply" is weak; "output drops from ~0.8 to ~0.2 as x4 crosses 0.62" is a finding.
+    validations: { required: true }
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: The specific queries and outputs that support it.
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: Enough that a judge could re-run it.
+    validations: { required: true }
+  - type: textarea
+    id: matters
+    attributes:
+      label: Why it matters
+      description: What does this tell you about the system as a whole?
+    validations: { required: true }
+  - type: dropdown
+    id: claimtype
+    attributes:
+      label: Claim type for findings.json
+      options: ["feature_effect","ignored_feature","threshold","interaction","derived_feature","decision_rule","failure_region"]
+    validations: { required: true }

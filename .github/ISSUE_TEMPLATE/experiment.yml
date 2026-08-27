@@ -1,0 +1,40 @@
+name: Experiment
+description: A batch of queries you ran, and what came back.
+title: "[EXPERIMENT] "
+labels: ["experiment"]
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: What question is this experiment answering? Link the hypothesis issue if there is one.
+    validations: { required: true }
+  - type: textarea
+    id: strategy
+    attributes:
+      label: Input strategy
+      description: What did you vary, over what range, holding what fixed?
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: Write this down *before* you look. It is the difference between an experiment and a fishing trip.
+    validations: { required: true }
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed result
+      description: Paste the numbers, or link a plot in this round's plots/ folder.
+    validations: { required: true }
+  - type: textarea
+    id: inference
+    attributes:
+      label: Inference
+      description: What does this let you conclude — and what does it NOT let you conclude?
+    validations: { required: true }
+  - type: input
+    id: used
+    attributes:
+      label: Queries used
+    validations: { required: true }
