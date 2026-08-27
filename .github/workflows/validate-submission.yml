@@ -1,13 +1,15 @@
 name: Validate submission
 
-# Pull requests only. Deliberately not on push — this repo is private and
+# Pull requests only. Deliberately not on push - this repo is private and
 # Actions minutes on private repos are limited.
 on:
   pull_request:
-    paths:
-      - 'round-*/**'
-      - 'final/**'
-      - 'tools/**'
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
   validate:
@@ -20,13 +22,82 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Label this PR with its round
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          round=$(printf '%s' "$TITLE" | grep -oiE 'round[ -]?[1-4]|final' | head -1 \
+                  | tr 'A-Z' 'a-z' | tr ' ' '-' | sed 's/round\([1-4]\)/round-\1/')
+          if [ -n "$round" ]; then
+            gh label create "$round" --color 1F3FB8 --description "Round submission" --force 2>/dev/null || true
+            gh label create "submission" --color F2A93C --force 2>/dev/null || true
+            gh pr edit "${{ github.event.pull_request.number }}" --add-label "$round" --add-label "submission" || true
+            echo "Labelled: $round"
+          else
+            echo "No round detected in title. Expected e.g. '[SUBMISSION] Round 2'."
+          fi
+
       - name: Validate findings and structure
-        run: python tools/validate.py
+        id: validate
+        run: |
+          set +e
+          python tools/validate.py 2>&1 | tee /tmp/validate.txt
+          echo "code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
 
       - name: Check no credentials are committed
+        id: creds
         run: |
-          if git ls-files | grep -Ei '(^|/)(\.env|token\.txt|credentials)' ; then
-            echo "::error::Credential-looking files are tracked in this repo. Remove them before submitting."
-            exit 1
+          set +e
+          hits=$(git ls-files | grep -Ei '(^|/)(\.env|token\.txt|credentials)')
+          if [ -n "$hits" ]; then
+            echo "$hits" > /tmp/creds.txt
+            echo "found=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=0" >> "$GITHUB_OUTPUT"
           fi
-          echo "No credential files tracked."
+
+      - name: Report result on the pull request
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            if [ "${{ steps.creds.outputs.found }}" = "1" ]; then
+              echo "### Credentials detected — fix this before anything else"
+              echo
+              echo "These tracked files look like credentials. Remove them from the repo and"
+              echo "rotate your team password at the registration desk."
+              echo
+              echo '```'
+              cat /tmp/creds.txt
+              echo '```'
+              echo
+            fi
+            if [ "${{ steps.validate.outputs.code }}" = "0" ]; then
+              echo "### Submission checks passed"
+              echo
+              echo "Your \`findings.json\` is well formed. This does **not** mean your claims are"
+              echo "correct - only that they are readable by the scorer."
+            else
+              echo "### Submission checks failed"
+              echo
+              echo "Fix these and push again. An unparseable \`findings.json\` cannot be scored at all."
+            fi
+            echo
+            echo '```'
+            cat /tmp/validate.txt
+            echo '```'
+            echo
+            echo "---"
+            echo "Reminder: opening this PR is **not** your submission. Register the PR URL in the"
+            echo "competition portal before the deadline - the portal's clock is the one that counts."
+          } > /tmp/comment.md
+
+          gh pr comment "${{ github.event.pull_request.number }}" \
+            --body-file /tmp/comment.md --edit-last --create-if-none || \
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/comment.md
+
+      - name: Fail if checks did not pass
+        if: steps.validate.outputs.code != '0' || steps.creds.outputs.found == '1'
+        run: exit 1
