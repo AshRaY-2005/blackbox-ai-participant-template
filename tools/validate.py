@@ -48,12 +48,56 @@ def warn(where, msg):
     warnings.append(f"{where}: {msg}")
 
 
+def check_predictions(name):
+    """Round 4 is marked on predictions.csv: id,target with a probability per row.
+    A file the scorer cannot read scores zero, so check it here rather than find out
+    from the leaderboard."""
+    f = ROOT / name / "predictions.csv"
+    at = f"{name}/predictions.csv"
+    if not f.exists():
+        err(name, "predictions.csv is missing — Round 4 is marked on it. See round-4/README.md")
+        return
+    import csv
+    rows = list(csv.DictReader(f.read_text().lstrip("\ufeff").splitlines()))
+    cols = [c.strip().lower() for c in (rows[0].keys() if rows else [])]
+    if "id" not in cols or "target" not in cols:
+        err(at, "needs exactly the columns id,target")
+        return
+    seen, bad = set(), 0
+    for r in rows:
+        r = {k.strip().lower(): v for k, v in r.items() if k}
+        try:
+            i, t = int(r["id"]), float(r["target"])
+        except (TypeError, ValueError):
+            bad += 1
+            continue
+        if not 0.0 <= t <= 1.0:
+            bad += 1
+        if i in seen:
+            err(at, f"id {i} appears more than once")
+        seen.add(i)
+    if bad:
+        err(at, f"{bad} row(s) are unreadable or have a target outside 0..1")
+    test = ROOT / name / "test.csv"
+    if test.exists():
+        n = max(0, len(test.read_text().strip().splitlines()) - 1)
+        if n and len(seen) != n:
+            err(at, f"has {len(seen)} predictions but your test set has {n} rows")
+    elif len(seen) < 100:
+        warn(at, f"only {len(seen)} rows — your test set comes from bb.round4_test()")
+
+
 def check_round(name):
     d = ROOT / name
     findings = d / "findings.json"
     report = d / "report.md"
 
-    if not findings.exists():
+    if name == "round-4":
+        check_predictions(name)
+        # findings are optional here; check them only if the team has written some
+        if not findings.exists() or not has_findings(name):
+            return
+    elif not findings.exists():
         err(name, "findings.json is missing")
         return
     try:
@@ -109,8 +153,15 @@ def has_work(name):
 
     A fresh clone must validate cleanly, so an unedited starter — placeholder team ID
     and the example claim still in place — counts as "not started" rather than as a
-    broken submission. Touch either one and the round starts being checked.
+    broken submission. Touch either one and the round starts being checked. In Round
+    4, a predictions.csv counts as work on its own.
     """
+    if name == "round-4" and (ROOT / name / "predictions.csv").exists():
+        return True
+    return has_findings(name)
+
+
+def has_findings(name):
     d = ROOT / name
     f = d / "findings.json"
     if not d.exists() or not f.exists():

@@ -1,8 +1,9 @@
 <!--
-Title this PR:  [SUBMISSION] Round N
+Title this PR:  [SUBMISSION] Round N — Name      e.g.  [SUBMISSION] Round 2 — Investigate
+                 [SUBMISSION] Final — The Unknown
 
-Opening the PR is not the submission. Register the PR URL in the competition
-portal before the round deadline — the portal's timestamp is what counts.
+This pull request IS your submission. Whatever it contains when the organisers end
+the round is what gets marked; anything pushed after that is not.
 -->
 
 ## Round

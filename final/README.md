@@ -25,5 +25,8 @@ Validate before you open the PR:
 python tools/validate.py final
 ```
 
-Then open a pull request titled `[SUBMISSION] The Unknown` and **register the PR URL in the
-competition portal before the deadline** — the portal's timestamp is what counts, not GitHub's.
+Then open a pull request titled `[SUBMISSION] Final — The Unknown`.
+
+**The pull request is your submission.** Open it before the organisers end the
+round — what it contains at that moment is what gets marked, and anything pushed
+afterwards is not.
