@@ -3,6 +3,19 @@ description: A claim about the hidden system that you intend to test.
 title: "[HYPOTHESIS] "
 labels: ["hypothesis"]
 body:
+  - type: input
+    id: team
+    attributes:
+      label: Team ID
+      description: From your registration slip. Judges find your issues by it.
+      placeholder: "BB-014"
+    validations: { required: true }
+  - type: dropdown
+    id: round
+    attributes:
+      label: Round
+      options: ["round-1", "round-2", "round-3", "round-4", "final"]
+    validations: { required: true }
   - type: markdown
     attributes:
       value: "Open one of these *before* you spend queries testing it. Judges read these to see how you thought, not just what you concluded."

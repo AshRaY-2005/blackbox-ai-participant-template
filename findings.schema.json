@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "BLACKBOX AI 1.0 \u2014 round findings",
-  "description": "Structured, checkable claims about the hidden system. This file is scored automatically. Your report.md carries the reasoning; this file carries the claims.",
+  "description": "Structured, checkable claims about the hidden system. Judges check each one. Your report.md carries the reasoning; this file carries the claims.",
   "type": "object",
   "required": [
     "round",

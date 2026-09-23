@@ -28,8 +28,8 @@ REQUIRED_FIELDS = {
     "decision_rule": ["category", "feature", "value", "outcome"],
     "failure_region": ["category", "feature", "observed"],
 }
-# Values that must come from a fixed vocabulary. Prose is not scoreable - claims are
-# matched on their fields, so "it goes up a lot" has to become direction="increases".
+# Values that must come from a fixed vocabulary. Judges read every team's claims side by
+# side, so "it goes up a lot" has to become direction="increases" to be comparable.
 ENUM_FIELDS = {
     "direction": {"increases", "decreases", "non_monotonic", "none"},
     "form": {"ratio", "product", "difference", "sum", "binned", "other"},
@@ -48,56 +48,17 @@ def warn(where, msg):
     warnings.append(f"{where}: {msg}")
 
 
-def check_predictions(name):
-    """Round 4 is marked on predictions.csv: id,target with a probability per row.
-    A file the scorer cannot read scores zero, so check it here rather than find out
-    from the leaderboard."""
-    f = ROOT / name / "predictions.csv"
-    at = f"{name}/predictions.csv"
-    if not f.exists():
-        err(name, "predictions.csv is missing — Round 4 is marked on it. See round-4/README.md")
-        return
-    import csv
-    rows = list(csv.DictReader(f.read_text().lstrip("\ufeff").splitlines()))
-    cols = [c.strip().lower() for c in (rows[0].keys() if rows else [])]
-    if "id" not in cols or "target" not in cols:
-        err(at, "needs exactly the columns id,target")
-        return
-    seen, bad = set(), 0
-    for r in rows:
-        r = {k.strip().lower(): v for k, v in r.items() if k}
-        try:
-            i, t = int(r["id"]), float(r["target"])
-        except (TypeError, ValueError):
-            bad += 1
-            continue
-        if not 0.0 <= t <= 1.0:
-            bad += 1
-        if i in seen:
-            err(at, f"id {i} appears more than once")
-        seen.add(i)
-    if bad:
-        err(at, f"{bad} row(s) are unreadable or have a target outside 0..1")
-    test = ROOT / name / "test.csv"
-    if test.exists():
-        n = max(0, len(test.read_text().strip().splitlines()) - 1)
-        if n and len(seen) != n:
-            err(at, f"has {len(seen)} predictions but your test set has {n} rows")
-    elif len(seen) < 100:
-        warn(at, f"only {len(seen)} rows — your test set comes from bb.round4_test()")
-
-
 def check_round(name):
     d = ROOT / name
     findings = d / "findings.json"
     report = d / "report.md"
 
-    if name == "round-4":
-        check_predictions(name)
-        # findings are optional here; check them only if the team has written some
-        if not findings.exists() or not has_findings(name):
-            return
-    elif not findings.exists():
+    if name == "round-4" and not has_findings(name):
+        # findings are optional here: the surrogate and its report are the submission
+        if not report.exists() or len(report.read_text().strip()) < 200:
+            warn(name, "report.md is missing or very short — it is what judges read")
+        return
+    if not findings.exists():
         err(name, "findings.json is missing")
         return
     try:
@@ -145,7 +106,7 @@ def check_round(name):
                 err(at, f"{f}='{c[f]}' is not one of {sorted(allowed)}")
 
     if not report.exists() or len(report.read_text().strip()) < 200:
-        warn(name, "report.md is missing or very short — findings.json is scored, but the report is what judges read")
+        warn(name, "report.md is missing or very short — findings.json lists the claims, the report is where judges see why you believe them")
 
 
 def has_work(name):
@@ -153,11 +114,8 @@ def has_work(name):
 
     A fresh clone must validate cleanly, so an unedited starter — placeholder team ID
     and the example claim still in place — counts as "not started" rather than as a
-    broken submission. Touch either one and the round starts being checked. In Round
-    4, a predictions.csv counts as work on its own.
+    broken submission. Touch either one and the round starts being checked.
     """
-    if name == "round-4" and (ROOT / name / "predictions.csv").exists():
-        return True
     return has_findings(name)
 
 

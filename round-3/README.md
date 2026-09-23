@@ -20,7 +20,7 @@ disqualifying.
 
 | File | Purpose |
 |---|---|
-| `findings.json` | Your claims, in structured form. **Scored automatically.** |
+| `findings.json` | Your claims, in structured form. Judges check each one. |
 | `report.md` | The reasoning behind the claims. Read by judges. |
 | `experiments/` | Scripts and query logs |
 | `plots/` | Anything visual that supports a claim |
@@ -31,8 +31,9 @@ Validate before you open the PR:
 python tools/validate.py round-3
 ```
 
-Then open a pull request titled `[SUBMISSION] Round 3 — Break`.
+Then open a pull request **from your fork to this repository**, titled
+`[BB-XXX] Round 3 — Break` with your own Team ID in place of `BB-XXX`.
 
-**The pull request is your submission.** Open it before the organisers end the
-round — what it contains at that moment is what gets marked, and anything pushed
-afterwards is not.
+**The pull request is your submission.** Open it before the organisers end the round.
+Judges mark the commit it is at when the round ends; anything pushed afterwards is not
+marked.

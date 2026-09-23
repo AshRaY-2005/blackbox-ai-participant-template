@@ -2,18 +2,26 @@
 
 **Reverse Engineer the Intelligence** · IEEE Student Branch, GCET · 6–7 October 2026
 
-This is your team's working repository. It is where you record how you investigated your
-assigned black box, and where your official submissions come from.
-
-> **Keep this repository private for the duration of the event.** Other teams must not be
-> able to read your findings.
+Every team forks this repository, works in its fork, and sends its pull requests and
+issues **back here**. Judges read them here.
 
 ## The short version
 
-- **Issues** = your investigation. Hypotheses, experiments, discoveries.
-- **Pull requests** = your official submissions, one per round.
-- **The pull request** = your submission. Open it before the organisers end the round;
-  what it contains then is what gets marked.
+1. **Fork** this repository (the *Fork* button, top right). One fork per team is enough;
+   add your teammates to it as collaborators so everyone can push.
+2. Work in your fork. Each round has its own folder.
+3. **Issues** = your investigation — hypotheses, experiments, discoveries. Open them
+   **on this repository**, not on your fork.
+4. **A pull request** from your fork to this repository = your submission for a round,
+   one per round.
+5. **Start every title with your Team ID**: `[BB-014] Round 2 — Investigate`. It is how
+   judges find your work among everyone else's.
+
+Judges mark the commit your pull request is at when the organisers end the round.
+Anything pushed after that is not marked.
+
+> **Everything here is public** — your fork, your pull requests and your issues. Other
+> teams can read them. Never commit your password or token.
 
 Full instructions: [`docs/how-to-submit.md`](docs/how-to-submit.md)
 
@@ -30,16 +38,18 @@ tools/      validate.py — run this before every PR
 docs/       how to submit
 ```
 
-Round 0 is not here — it is answered in the portal and scored automatically.
+Round 0 is not here — it is a quiz in the portal, and the portal marks it.
 
 ## Getting started
 
 ```bash
+git clone https://github.com/<your-username>/blackbox-ai-participant-template
+cd blackbox-ai-participant-template
 python tools/validate.py
 ```
 
-That should pass on a fresh clone. Then, once you have your credentials from the
-registration desk:
+That should pass on a fresh clone of your fork. Then, once you have your credentials
+from the registration desk:
 
 ```python
 from src.blackbox import Blackbox
@@ -81,11 +91,11 @@ querying now is expensive later.
 write code, plot results and reason about what you observed. They cannot tell you what
 your black box will output. That information exists only on the competition server.
 
-**Evidence beats guessing.** A confident wrong claim in `findings.json` costs more than an
+**Evidence beats guessing.** A confident claim that turns out wrong costs more than an
 uncertain one. Saying "we are not sure" is a legitimate and rewarded answer.
 
 ## Never commit
 
-Your team password, your API token, or any `.env` file. CI will fail your submission PR if
-it finds one, and a leaked credential is your problem, not ours — anyone with it can spend
-your budget.
+Your team password, your API token, or any `.env` file. Your fork is public: the moment
+you push one, anyone can read it and spend your budget. The check on your pull request
+fails if it finds one — if that happens, ask the registration desk for a new password.

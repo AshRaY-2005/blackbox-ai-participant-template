@@ -96,33 +96,6 @@ class Blackbox:
         """
         return self._call("GET", "/queries/export")["queries"]
 
-    def round4_test(self, save_to: str | None = "round-4/test.csv") -> list[dict]:
-        """Round 4's test set for YOUR box - the rows your predictions are marked on.
-
-        Free, and the same file every time. Available while Round 4 is open. Predict,
-        for each row, the probability your box returns APPROVE, and submit it as
-        round-4/predictions.csv with the columns id,target.
-        """
-        import csv
-        import io
-        import pathlib
-
-        req = urllib.request.Request(f"{self.base}/api/v1/round4/test.csv",
-                                     headers=getattr(self, "_auth", {}))
-        try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as r:
-                text = r.read().decode("utf-8")
-        except urllib.error.HTTPError as e:
-            try:
-                msg = json.loads(e.read()).get("error", {}).get("message", e.reason)
-            except Exception:
-                msg = e.reason
-            raise RuntimeError(msg) from None
-        if save_to:
-            pathlib.Path(save_to).parent.mkdir(parents=True, exist_ok=True)
-            pathlib.Path(save_to).write_text(text)
-        return list(csv.DictReader(io.StringIO(text)))
-
     def leaderboard(self) -> list[dict]:
         """Published standings. Empty until organisers publish a round."""
         return self._call("GET", "/leaderboard")
