@@ -83,6 +83,12 @@ another laptop, and the ones from a browser tab you closed two hours ago. You do
 have to build your own logging to survive Round 4 — though keeping your own notes
 about *why* you ran each experiment is still on you, and it is what judges read.
 
+**The names are labels.** Every box is a synthetic system dressed up as a lending
+service, a triage desk, a fraud screen and so on, and it does not follow real-world
+logic: a lending box may well approve more applicants with more defaults. Trust what your
+queries show, not what the domain suggests. Any number within a field's range is
+accepted, fractions included, even in fields that sound like counts.
+
 **Your queries carry across rounds.** You keep the same black box from Round 1 through
 Round 4, so the data you collect early becomes your training set in Round 4. Careless
 querying now is expensive later.
