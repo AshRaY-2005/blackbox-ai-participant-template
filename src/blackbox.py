@@ -18,10 +18,18 @@ Nothing here is secret — it just saves you writing auth boilerplate.
     # everything you have ever asked, back as rows. Also free.
     import pandas as pd
     df = pd.DataFrame(bb.export())
+
+The client saves its session in token.txt (never committed - .gitignore and the PR
+check both catch it) and reuses it on the next run, so re-running a script does not
+sign a teammate out. If the server says you are going too fast, it waits and retries;
+that never costs a query.
 """
 from __future__ import annotations
 
 import json
+import os
+import pathlib
+import time
 import urllib.error
 import urllib.request
 
@@ -33,15 +41,44 @@ class QuotaExhausted(RuntimeError):
 class RateLimited(RuntimeError):
     """You are sending too fast. This does NOT cost you quota — back off and retry."""
 
+    retry_after = 2.0
+
+
+class NotSignedIn(RuntimeError):
+    """The session was signed out, e.g. because the team had too many open."""
+
 
 class Blackbox:
-    def __init__(self, base_url: str, team: str, password: str, timeout: int = 30):
+    def __init__(self, base_url: str, team: str, password: str, timeout: int = 30,
+                 token_file: str | None = "token.txt"):
         self.base = base_url.rstrip("/")
         self.timeout = timeout
-        self.token = self._login(team, password)
+        self._creds = (team, password)
+        self._token_file = pathlib.Path(token_file) if token_file else None
+        self._auth = {}
+        self.token = self._resume() or self._login(team, password)
 
     # ---- plumbing -------------------------------------------------------
-    def _call(self, method: str, path: str, body: dict | None = None) -> dict:
+    def _call(self, method: str, path: str, body: dict | None = None,
+              retries: int = 6) -> dict:
+        """One API call. Waits and retries when the server says we are going too fast,
+        and signs in again once if this session was signed out."""
+        signed_in_again = False
+        for attempt in range(retries + 1):
+            try:
+                return self._send(method, path, body)
+            except RateLimited as e:
+                if attempt == retries:
+                    raise
+                time.sleep(max(1.0, e.retry_after))
+            except NotSignedIn:
+                if signed_in_again or path == "/auth/login" or not self._auth:
+                    raise
+                signed_in_again = True
+                self._login(*self._creds)
+        raise AssertionError("unreachable")
+
+    def _send(self, method: str, path: str, body: dict | None) -> dict:
         req = urllib.request.Request(
             f"{self.base}/api/v1{path}",
             method=method,
@@ -61,14 +98,50 @@ class Blackbox:
             msg = detail.get("message", e.reason)
             if code == "QUOTA_EXHAUSTED":
                 raise QuotaExhausted(msg) from None
-            if code == "RATE_LIMITED":
-                raise RateLimited(msg) from None
+            if code == "RATE_LIMITED" or e.code == 429:
+                err = RateLimited(msg)
+                try:
+                    err.retry_after = float(e.headers.get("Retry-After") or 2)
+                except ValueError:
+                    pass
+                raise err from None
+            if e.code == 401:
+                raise NotSignedIn(f"{code or e.code}: {msg}") from None
             raise RuntimeError(f"{code or e.code}: {msg}") from None
+
+    def _resume(self) -> str | None:
+        """Reuse this laptop's saved session for the same team and server. Signing in
+        on every run piles up sessions, and past the team's limit the server signs out
+        the oldest - which can be a teammate's script halfway through a sweep."""
+        f = self._token_file
+        if f is None or not f.exists():
+            return None
+        try:
+            saved = json.loads(f.read_text())
+        except (OSError, ValueError):
+            return None
+        if saved.get("team") != self._creds[0] or saved.get("base") != self.base:
+            return None
+        self._auth = {"Authorization": f"Bearer {saved.get('token', '')}"}
+        try:
+            self._send("GET", "/me", None)
+        except (NotSignedIn, RuntimeError):
+            self._auth = {}
+            return None
+        return saved["token"]
 
     def _login(self, team: str, password: str) -> str:
         self._auth = {}
         tok = self._call("POST", "/auth/login", {"team": team, "password": password})["token"]
         self._auth = {"Authorization": f"Bearer {tok}"}
+        self.token = tok
+        if self._token_file is not None:
+            try:
+                self._token_file.write_text(
+                    json.dumps({"team": team, "base": self.base, "token": tok}))
+                os.chmod(self._token_file, 0o600)
+            except OSError:
+                pass            # a read-only folder just means no reuse next time
         return tok
 
     # ---- the bits you actually use --------------------------------------
