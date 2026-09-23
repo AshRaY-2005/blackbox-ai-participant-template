@@ -1,7 +1,8 @@
 # How to submit
 
-There are two things to keep straight: **GitHub is where you show your work**, and the
-**portal is where the clock is**. Doing one without the other does not count.
+**GitHub is where you show your work, and a pull request is your submission.** Rounds
+end when the organisers end them, and what your pull request contains at that moment is
+what gets marked.
 
 ## During a round
 
@@ -23,11 +24,23 @@ Rejected hypotheses are worth as much as confirmed ones. Do not delete them.
    ```bash
    python tools/validate.py round-N
    ```
-4. Open a pull request titled `[SUBMISSION] Round N`.
-5. **Register the PR URL in the competition portal.**
+4. Open a pull request titled `[SUBMISSION] Round N — Name`, for example
+   `[SUBMISSION] Round 2 — Investigate` or `[SUBMISSION] Final — The Unknown`.
 
-Step 5 is the actual submission. The portal records the time on the server clock; GitHub's
-own timestamps are not used. A perfect PR that was never registered scores zero.
+That pull request is the submission — there is nothing else to register. Open it before the
+organisers end the round: when they do, each team's pull request is frozen as it stands and
+marked. Anything pushed afterwards is not seen. Make sure your repository is registered on the
+portal (**Your repository**) — that is how the organisers find it.
+
+## How findings are marked
+
+Each round is marked on what **that round** is about. Round 1 on how the system behaves,
+Round 2 on the structure underneath, Round 3 on where it breaks. The Final is marked on
+everything about the Final's system.
+
+So put your findings for *this* round in this round's `findings.json`. Repeating something
+you established in an earlier round is harmless — it is neither credited again nor
+penalised — so you do not need to decide whether to carry old claims forward.
 
 ## findings.json
 
@@ -111,7 +124,8 @@ bb.export()       # every query your team has made, as flat rows
 
 `export()` is the one to remember. Round 4 asks you to reconstruct the system from
 your own observations, and this returns all of them — across teammates, across
-laptops, across closed browser tabs.
+laptops, across closed browser tabs. In Round 4, `bb.round4_test()` downloads the rows
+you are marked on; see `round-4/README.md`.
 
 ```python
 import pandas as pd

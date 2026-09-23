@@ -12,7 +12,8 @@ assigned black box, and where your official submissions come from.
 
 - **Issues** = your investigation. Hypotheses, experiments, discoveries.
 - **Pull requests** = your official submissions, one per round.
-- **The portal** = where the deadline actually is. Register your PR URL there or it does not count.
+- **The pull request** = your submission. Open it before the organisers end the round;
+  what it contains then is what gets marked.
 
 Full instructions: [`docs/how-to-submit.md`](docs/how-to-submit.md)
 

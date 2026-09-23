@@ -26,16 +26,35 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TITLE: ${{ github.event.pull_request.title }}
+          PR: ${{ github.event.pull_request.number }}
         run: |
-          round=$(printf '%s' "$TITLE" | grep -oiE 'round[ -]?[1-4]|final' | head -1 \
-                  | tr 'A-Z' 'a-z' | tr ' ' '-' | sed 's/round\([1-4]\)/round-\1/')
+          # The folder the PR changes decides the round; the title is only a fallback.
+          # Teams were once told three different title formats, and a labeller that
+          # read only "Round N" left every "[SUBMISSION] Investigate" PR unlabelled.
+          # Written so no step fails: this runs under `bash -e`, and a pipeline or test
+          # that ends non-zero would abort the whole check before validation ran.
+          files=$(gh pr view "$PR" --json files -q '.files[].path' 2>/dev/null || true)
+          folders=$(printf '%s\n' "$files" | grep -oE '^(round-[1-4]|final)/' | sort -u | tr -d '/' || true)
+          round=""
+          if [ "$(printf '%s\n' "$folders" | grep -c .)" = "1" ]; then round="$folders"; fi
+          if [ -z "$round" ]; then
+            t=$(printf '%s' "$TITLE" | tr 'A-Z' 'a-z')
+            case "$t" in
+              *final*|*unknown*)            round=final ;;
+              *"round 1"*|*round-1*|*observe*)      round=round-1 ;;
+              *"round 2"*|*round-2*|*investigate*)  round=round-2 ;;
+              *"round 3"*|*round-3*|*break*)        round=round-3 ;;
+              *"round 4"*|*round-4*|*reconstruct*)  round=round-4 ;;
+            esac
+          fi
           if [ -n "$round" ]; then
             gh label create "$round" --color 1F3FB8 --description "Round submission" --force 2>/dev/null || true
             gh label create "submission" --color F2A93C --force 2>/dev/null || true
             gh pr edit "${{ github.event.pull_request.number }}" --add-label "$round" --add-label "submission" || true
             echo "Labelled: $round"
           else
-            echo "No round detected in title. Expected e.g. '[SUBMISSION] Round 2'."
+            echo "No round detected. Change files in exactly one round folder, or title the PR"
+            echo "e.g. '[SUBMISSION] Round 2 — Investigate'."
           fi
 
       - name: Validate findings and structure
@@ -86,12 +105,12 @@ jobs:
             fi
             echo
             echo '```'
-            cat /tmp/validate.txt
+            cat /tmp/validate.txt 2>/dev/null || echo "(validation did not run - see the workflow log)"
             echo '```'
             echo
             echo "---"
-            echo "Reminder: opening this PR is **not** your submission. Register the PR URL in the"
-            echo "competition portal before the deadline - the portal's clock is the one that counts."
+            echo "Reminder: this pull request **is** your submission. What it contains when the"
+            echo "organisers end the round is what gets marked; anything pushed afterwards is not."
           } > /tmp/comment.md
 
           gh pr comment "${{ github.event.pull_request.number }}" \

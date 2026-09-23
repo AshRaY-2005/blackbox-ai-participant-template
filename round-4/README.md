@@ -12,14 +12,41 @@ Anything you worked out in Round 2 about hidden transformations belongs in your 
 engineering here. A surrogate that ignores what you already discovered will underperform
 one that uses it.
 
+## Your test set
+
+While Round 4 is open, download your team's test set from the portal
+(**Download test set**) or from Python:
+
+```python
+rows = bb.round4_test()           # also saves round-4/test.csv
+```
+
+It is rows your box has never been asked about, in the same column names you have been
+querying all event. Downloading it is free and costs no queries. It is **your box
+only** — another team's file is for a different system and is no use to you.
+
 ## What to submit
 
 | File | Purpose |
 |---|---|
-| `findings.json` | Your claims, in structured form. **Scored automatically.** |
-| `report.md` | The reasoning behind the claims. Read by judges. |
-| `experiments/` | Scripts and query logs |
-| `plots/` | Anything visual that supports a claim |
+| `predictions.csv` | For every test row, the probability your box returns `APPROVE`. **Scored automatically.** |
+| `findings.json` | Anything new you established this round. Optional here. |
+| `report.md` | How you built the surrogate and why. Read by judges. |
+| `experiments/` | Your training data and scripts |
+| `plots/` | Anything visual that supports the report |
+
+`predictions.csv` has exactly two columns:
+
+```csv
+id,target
+0,0.93
+1,0.04
+```
+
+One row per test row, `target` between 0 and 1. It is marked by how well it ranks the
+rows (AUC): a coin toss scores nothing and a perfect ranking scores everything, so what
+matters is getting the *order* right — including the rows where something other than the
+model decides.
 
 Validate before you open the PR:
 
@@ -27,5 +54,8 @@ Validate before you open the PR:
 python tools/validate.py round-4
 ```
 
-Then open a pull request titled `[SUBMISSION] Reconstruct` and **register the PR URL in the
-competition portal before the deadline** — the portal's timestamp is what counts, not GitHub's.
+Then open a pull request titled `[SUBMISSION] Round 4 — Reconstruct`.
+
+**The pull request is your submission.** Open it before the organisers end the
+round — what it contains at that moment is what gets marked, and anything pushed
+afterwards is not.
