@@ -65,7 +65,9 @@ out = bb.query([
 print(out)
 ```
 
-The server address is given at the briefing. **One row is one query** — batching several
+The client remembers its session in `token.txt` (git ignores it) so re-running a script
+doesn't sign your teammates out, and if you send too fast it waits and retries by itself —
+that never costs a query. The server address is given at the briefing. **One row is one query** — batching several
 rows into a single request is faster, but costs exactly the same as sending them separately.
 
 ## Things worth knowing before you start

@@ -123,7 +123,7 @@ you more than an uncertain one. If you are not sure, say so — that is rewarded
 | `interaction` | Two inputs that matter together | `features` |
 | `derived_feature` | Inputs combined before the model sees them | `features`, `form` |
 | `decision_rule` | A rule sitting on top of the model | `category`, `feature`, `value`, `outcome` |
-| `failure_region` | Where the system is confidently wrong | `category`, `feature`, `observed` |
+| `failure_region` | Where the system is confidently wrong | `feature`, `observed` (and `category` if it only happens in one) |
 
 Four fields take fixed vocabularies, so two teams saying the same thing say it the same
 way:

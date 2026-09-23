@@ -26,7 +26,9 @@ REQUIRED_FIELDS = {
     "interaction": ["features"],
     "derived_feature": ["features", "form"],
     "decision_rule": ["category", "feature", "value", "outcome"],
-    "failure_region": ["category", "feature", "observed"],
+    # category only when the failure is confined to one; a boundary on a numeric input
+    # (the effect reversing past some value) has none, and must not be forced to invent one
+    "failure_region": ["feature", "observed"],
 }
 # Values that must come from a fixed vocabulary. Judges read every team's claims side by
 # side, so "it goes up a lot" has to become direction="increases" to be comparable.
