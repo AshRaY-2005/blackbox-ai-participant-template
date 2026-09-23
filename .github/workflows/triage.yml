@@ -1,0 +1,138 @@
+name: Triage
+
+# Labels every pull request and issue with its team (BB-014) and round (round-2), so a
+# judge filters by label instead of reading hundreds of titles, and asks for a Team ID
+# when there is none.
+#
+# pull_request_target runs this repository's own copy of this file, with a token that
+# can label - which is why it must never check out or run anything from a pull request.
+# Titles and bodies are written by whoever opened them, so they are read from
+# environment variables and never pasted into the script.
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize]
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: triage-${{ github.event.pull_request.number || github.event.issue.number }}
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Label by team and round
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KIND: ${{ github.event_name == 'issues' && 'issue' || 'pr' }}
+          NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+          TITLE: ${{ github.event.pull_request.title || github.event.issue.title }}
+          BODY: ${{ github.event.pull_request.body || github.event.issue.body }}
+          ASSOC: ${{ github.event.pull_request.author_association || github.event.issue.author_association }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, subprocess, sys
+
+          repo, kind, num = os.environ["GITHUB_REPOSITORY"], os.environ["KIND"], os.environ["NUMBER"]
+          title = os.environ.get("TITLE") or ""
+          body = re.sub(r"<!--.*?-->", "", os.environ.get("BODY") or "", flags=re.S)
+          staff = os.environ.get("ASSOC", "") in ("OWNER", "MEMBER", "COLLABORATOR")
+          ROUNDS = ["round-1", "round-2", "round-3", "round-4", "final"]
+          WORDS = {"observe": "round-1", "investigate": "round-2", "break": "round-3",
+                   "reconstruct": "round-4", "final": "final", "unknown": "final"}
+          BOT = "github-actions[bot]"
+
+
+          def gh(*args, data=None):
+              cmd = ["gh", "api", *args] + (["--input", "-"] if data is not None else [])
+              r = subprocess.run(cmd, input=json.dumps(data) if data is not None else None,
+                                 capture_output=True, text=True)
+              if r.returncode:
+                  print(f"gh api {' '.join(args)}: {r.stderr.strip()}", file=sys.stderr)
+                  return None
+              return json.loads(r.stdout) if r.stdout.strip() else {}
+
+
+          def team_in(text):
+              m = re.search(r"\bBB[-_ ]?(\d{1,3})\b", text, re.I)
+              return f"BB-{int(m.group(1)):03d}" if m else None
+
+
+          def section(name):
+              # issue forms render fields as "### Team ID"; the PR template uses "## Team ID"
+              m = re.search(rf"^#{{2,3}}[ \t]*{re.escape(name)}[ \t]*\n(.*?)(?=^#{{1,3}}[ \t]|\Z)",
+                            body, re.I | re.M | re.S)
+              return m.group(1).strip() if m else ""
+
+
+          def round_in(text):
+              t = text.lower()
+              m = re.search(r"\bround[\s_-]*([1-4])\b", t)
+              if m:
+                  return f"round-{m.group(1)}"
+              return next((r for w, r in WORDS.items() if re.search(rf"\b{w}\b", t)), None)
+
+
+          team = team_in(title) or team_in(section("Team ID"))
+          if kind == "issue":
+              rnd = section("Round").lower()
+              rnd = rnd if rnd in ROUNDS else None
+          else:
+              # the folder a pull request changes decides its round; the title is the fallback
+              files = gh(f"repos/{repo}/pulls/{num}/files?per_page=100") or []
+              folders = {f["filename"].split("/")[0] for f in files} & set(ROUNDS)
+              rnd = (next(iter(folders)) if len(folders) == 1
+                     else round_in(title) or round_in(section("Round")))
+
+          want = {x for x in (team, rnd) if x}
+          if kind == "pr" and want:
+              want.add("submission")
+          current = {lb["name"] for lb in (gh(f"repos/{repo}/issues/{num}") or {}).get("labels", [])}
+          for old in current - want:
+              # a team or round label that stopped applying because the title was corrected
+              if re.fullmatch(r"BB-\d{3}", old) or old in ROUNDS:
+                  gh("-X", "DELETE", f"repos/{repo}/issues/{num}/labels/{old}")
+          for name in sorted(want - current):
+              color, desc = (("C5DEF5", "Team") if name.startswith("BB-") else
+                             ("1F3FB8", "Round") if name in ROUNDS else
+                             ("F2A93C", "Round submission"))
+              gh("-X", "POST", f"repos/{repo}/labels", "-f", f"name={name}",
+                 "-f", f"color={color}", "-f", f"description={desc}")   # fails if it exists: fine
+          if want - current:
+              gh("-X", "POST", f"repos/{repo}/issues/{num}/labels",
+                 data={"labels": sorted(want - current)})
+
+          # a Team ID given only in the description goes to the front of the title
+          if team and not team_in(title):
+              where = "pulls" if kind == "pr" else "issues"
+              gh("-X", "PATCH", f"repos/{repo}/{where}/{num}", "-f", f"title=[{team}] {title}")
+
+          missing = []
+          if not team:
+              missing.append("your **Team ID** at the start of the title, e.g. "
+                             + ("`[BB-014] Round 2 — Investigate`" if kind == "pr"
+                                else "`[BB-014] Hypothesis: ...`"))
+          if not rnd:
+              missing.append("**which round** this is for - `Round 2` in the title, or "
+                             "changes in exactly one round folder")
+          mine = [c for c in (gh(f"repos/{repo}/issues/{num}/comments?per_page=100") or [])
+                  if c.get("user", {}).get("login") == BOT]
+          if missing and not staff:
+              text = ("Judges find work by Team ID and round, and this is missing:\n\n"
+                      + "\n".join(f"- {m}" for m in missing)
+                      + "\n\nEdit the title and this updates itself.")
+          elif mine and not missing:
+              text = f"Labelled `{team}` · `{rnd}`. Thanks."
+          else:
+              text = None
+          if text and mine:
+              gh("-X", "PATCH", f"repos/{repo}/issues/comments/{mine[-1]['id']}", "-f", f"body={text}")
+          elif text:
+              gh("-X", "POST", f"repos/{repo}/issues/{num}/comments", "-f", f"body={text}")
+          print(f"{kind} #{num}: team={team} round={rnd} labels+={sorted(want - current)}")
+          PY

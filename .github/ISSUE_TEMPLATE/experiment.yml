@@ -3,6 +3,19 @@ description: A batch of queries you ran, and what came back.
 title: "[EXPERIMENT] "
 labels: ["experiment"]
 body:
+  - type: input
+    id: team
+    attributes:
+      label: Team ID
+      description: From your registration slip. Judges find your issues by it.
+      placeholder: "BB-014"
+    validations: { required: true }
+  - type: dropdown
+    id: round
+    attributes:
+      label: Round
+      options: ["round-1", "round-2", "round-3", "round-4", "final"]
+    validations: { required: true }
   - type: textarea
     id: objective
     attributes:

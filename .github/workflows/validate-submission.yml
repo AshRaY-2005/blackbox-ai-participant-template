@@ -1,15 +1,15 @@
 name: Validate submission
 
-# Pull requests only. Deliberately not on push - this repo is private and
-# Actions minutes on private repos are limited.
+# Runs the pull request's own files through tools/validate.py. Pull requests come from
+# forks, so this runs with a read-only token and cannot label or comment: the result is
+# the check itself, with the details in its summary (Details -> Summary). Labels and the
+# Team ID reminder come from triage.yml, which never runs anything from a pull request.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
-  pull-requests: write
-  issues: write
 
 jobs:
   validate:
@@ -21,41 +21,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Label this PR with its round
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TITLE: ${{ github.event.pull_request.title }}
-          PR: ${{ github.event.pull_request.number }}
-        run: |
-          # The folder the PR changes decides the round; the title is only a fallback.
-          # Teams were once told three different title formats, and a labeller that
-          # read only "Round N" left every "[SUBMISSION] Investigate" PR unlabelled.
-          # Written so no step fails: this runs under `bash -e`, and a pipeline or test
-          # that ends non-zero would abort the whole check before validation ran.
-          files=$(gh pr view "$PR" --json files -q '.files[].path' 2>/dev/null || true)
-          folders=$(printf '%s\n' "$files" | grep -oE '^(round-[1-4]|final)/' | sort -u | tr -d '/' || true)
-          round=""
-          if [ "$(printf '%s\n' "$folders" | grep -c .)" = "1" ]; then round="$folders"; fi
-          if [ -z "$round" ]; then
-            t=$(printf '%s' "$TITLE" | tr 'A-Z' 'a-z')
-            case "$t" in
-              *final*|*unknown*)            round=final ;;
-              *"round 1"*|*round-1*|*observe*)      round=round-1 ;;
-              *"round 2"*|*round-2*|*investigate*)  round=round-2 ;;
-              *"round 3"*|*round-3*|*break*)        round=round-3 ;;
-              *"round 4"*|*round-4*|*reconstruct*)  round=round-4 ;;
-            esac
-          fi
-          if [ -n "$round" ]; then
-            gh label create "$round" --color 1F3FB8 --description "Round submission" --force 2>/dev/null || true
-            gh label create "submission" --color F2A93C --force 2>/dev/null || true
-            gh pr edit "${{ github.event.pull_request.number }}" --add-label "$round" --add-label "submission" || true
-            echo "Labelled: $round"
-          else
-            echo "No round detected. Change files in exactly one round folder, or title the PR"
-            echo "e.g. '[SUBMISSION] Round 2 — Investigate'."
-          fi
 
       - name: Validate findings and structure
         id: validate
@@ -76,17 +41,16 @@ jobs:
             echo "found=0" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Report result on the pull request
+      - name: Summary
         if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           {
             if [ "${{ steps.creds.outputs.found }}" = "1" ]; then
               echo "### Credentials detected — fix this before anything else"
               echo
-              echo "These tracked files look like credentials. Remove them from the repo and"
-              echo "rotate your team password at the registration desk."
+              echo "These tracked files look like credentials. Your fork is public, so treat"
+              echo "them as already seen: remove them and ask the registration desk for a new"
+              echo "team password."
               echo
               echo '```'
               cat /tmp/creds.txt
@@ -97,25 +61,20 @@ jobs:
               echo "### Submission checks passed"
               echo
               echo "Your \`findings.json\` is well formed. This does **not** mean your claims are"
-              echo "correct - only that they are readable by the scorer."
+              echo "correct — only that judges can read them."
             else
               echo "### Submission checks failed"
               echo
-              echo "Fix these and push again. An unparseable \`findings.json\` cannot be scored at all."
+              echo "Fix these and push again to the same branch."
             fi
             echo
             echo '```'
-            cat /tmp/validate.txt 2>/dev/null || echo "(validation did not run - see the workflow log)"
+            cat /tmp/validate.txt 2>/dev/null || echo "(validation did not run - see the log)"
             echo '```'
             echo
-            echo "---"
-            echo "Reminder: this pull request **is** your submission. What it contains when the"
-            echo "organisers end the round is what gets marked; anything pushed afterwards is not."
-          } > /tmp/comment.md
-
-          gh pr comment "${{ github.event.pull_request.number }}" \
-            --body-file /tmp/comment.md --edit-last --create-if-none || \
-          gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/comment.md
+            echo "Reminder: this pull request **is** your submission. Judges mark the commit it"
+            echo "is at when the organisers end the round; anything pushed afterwards is not."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Fail if checks did not pass
         if: steps.validate.outputs.code != '0' || steps.creds.outputs.found == '1'

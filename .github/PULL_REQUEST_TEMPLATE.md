@@ -1,10 +1,15 @@
 <!--
-Title this PR:  [SUBMISSION] Round N — Name      e.g.  [SUBMISSION] Round 2 — Investigate
-                 [SUBMISSION] Final — The Unknown
+Title this PR with your Team ID first:
+    [BB-014] Round 2 — Investigate
+    [BB-014] Final — The Unknown
 
-This pull request IS your submission. Whatever it contains when the organisers end
-the round is what gets marked; anything pushed after that is not.
+This pull request IS your submission. Judges mark the commit it is at when the
+organisers end the round; anything pushed after that is not marked.
 -->
+
+## Team ID
+
+<!-- e.g. BB-014 -->
 
 ## Round
 
@@ -16,15 +21,17 @@ the round is what gets marked; anything pushed after that is not.
 
 ## Checklist
 
+- [ ] The title starts with our Team ID
 - [ ] `round-N/findings.json` is filled in and validates (`python tools/validate.py`)
 - [ ] `round-N/report.md` explains the reasoning behind the claims
 - [ ] Plots or logs supporting each claim are in `round-N/plots/` or `round-N/experiments/`
-- [ ] Hypothesis and experiment issues are linked below
+- [ ] Our hypothesis and experiment issues are linked below
 - [ ] No credentials, tokens or `.env` files are in this diff
 
 ## Investigation trail
 
-<!-- Link the issues. Rejected hypotheses count for as much as confirmed ones. -->
+<!-- Link your issues on this repository (#123). Rejected hypotheses count for as much
+     as confirmed ones. -->
 
 - Hypotheses tested: #
 - Hypotheses **rejected**: #
