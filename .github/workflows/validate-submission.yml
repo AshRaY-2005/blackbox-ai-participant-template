@@ -31,9 +31,12 @@ jobs:
           # The folder the PR changes decides the round; the title is only a fallback.
           # Teams were once told three different title formats, and a labeller that
           # read only "Round N" left every "[SUBMISSION] Investigate" PR unlabelled.
-          round=$(gh pr view "$PR" --json files -q '.files[].path' 2>/dev/null \
-                  | grep -oE '^(round-[1-4]|final)/' | sort -u | tr -d '/' \
-                  | { read -r first; read -r second; [ -z "$second" ] && echo "$first"; })
+          # Written so no step fails: this runs under `bash -e`, and a pipeline or test
+          # that ends non-zero would abort the whole check before validation ran.
+          files=$(gh pr view "$PR" --json files -q '.files[].path' 2>/dev/null || true)
+          folders=$(printf '%s\n' "$files" | grep -oE '^(round-[1-4]|final)/' | sort -u | tr -d '/' || true)
+          round=""
+          if [ "$(printf '%s\n' "$folders" | grep -c .)" = "1" ]; then round="$folders"; fi
           if [ -z "$round" ]; then
             t=$(printf '%s' "$TITLE" | tr 'A-Z' 'a-z')
             case "$t" in
@@ -102,7 +105,7 @@ jobs:
             fi
             echo
             echo '```'
-            cat /tmp/validate.txt
+            cat /tmp/validate.txt 2>/dev/null || echo "(validation did not run - see the workflow log)"
             echo '```'
             echo
             echo "---"
