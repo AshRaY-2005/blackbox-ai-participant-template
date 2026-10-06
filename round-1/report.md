@@ -1,20 +1,26 @@
 # round-1 — Observe
 
-**Team:** BB-XXX
-**Queries used:** 0 / budget
+**Team:** BB-004
+**Queries used:** 147 / budget
 
 ## What we concluded
 
-<!-- The short version. What is this system doing? -->
+The GK-03 system is a black-box scoring function whose output does not always follow normal credit/fraud intuition.
 
-## How we got there
+Starting from an observed score of approximately `0.5346`, iterative experimentation produced a best observed score of:
 
-<!-- The experiments that mattered, in order. Why each one was worth a query. -->
+**`0.9862 — APPROVE`**
 
-## What we ruled out
+The strongest observed configuration was:
 
-<!-- Hypotheses you rejected and what killed them. This section carries real marks. -->
-
-## What we are still unsure about
-
-<!-- Being honest here scores better than overclaiming. -->
+```text
+account_age_days      = 75
+account_balance       = 75
+amount                = 45
+beneficiaries         = 3
+channel               = D
+linked_cards          = 10
+months_active         = 0
+recent_chargebacks    = 1
+trust_score           = 355
+utilisation           = 1
