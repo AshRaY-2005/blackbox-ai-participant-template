@@ -1,17 +1,50 @@
 {
   "round": "round-1",
-  "team": "BB-XXX",
-  "queries_used": 0,
+  "team": "BB-004",
+  "queries_used": 147,
   "claims": [
     {
       "type": "feature_effect",
-      "feature": "x1",
-      "direction": "increases",
+      "feature": "trust_score",
+      "direction": "decreases",
       "strength": "strong",
-      "confidence": 0.0,
+      "confidence": 0.93,
       "evidence": {
-        "query_ids": [],
-        "summary": "Replace this example claim with your own. Every claim needs evidence."
+        "query_ids": [145, 146, 147],
+        "summary": "The highest observed score was 0.9862 around trust_score values 345-355, while increasing trust_score to 700 reduced the observed score to 0.9798 and increasing it to 900 reduced it further to 0.9691. This indicates that higher trust_score values in the tested range reduce the approval score rather than increasing it."
+      }
+    },
+    {
+      "type": "feature_effect",
+      "feature": "channel",
+      "direction": "D_is_highest",
+      "strength": "strong",
+      "confidence": 0.95,
+      "evidence": {
+        "query_ids": [138, 139, 140, 141, 142],
+        "summary": "The tested channel values produced scores of A=0.9838, B=0.9846, C=0.9851, and D=0.9862. Channel D produced the highest observed score."
+      }
+    },
+    {
+      "type": "feature_effect",
+      "feature": "account_age_days",
+      "direction": "increases",
+      "strength": "moderate",
+      "confidence": 0.82,
+      "evidence": {
+        "query_ids": [132, 133],
+        "summary": "Increasing account_age_days from 70 to 75 increased the observed score from 0.9825 to 0.9862. This supports a positive effect in the tested region, but does not establish a global monotonic relationship."
+      }
+    },
+    {
+      "type": "feature_effect",
+      "feature": "linked_cards",
+      "direction": "no_observed_effect",
+      "strength": "moderate",
+      "confidence": 0.76,
+      "evidence": {
+        "query_ids": [134, 135, 136, 137],
+        "summary": "Changing linked_cards among 10, 15, 18, and 20 produced approximately the same observed score of 0.9862 in the tested configuration. This suggests little or no measurable effect in this region, but does not prove that the feature is globally ignored."
       }
     }
   ]
