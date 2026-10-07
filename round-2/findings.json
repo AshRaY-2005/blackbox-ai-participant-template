@@ -1,17 +1,61 @@
 {
   "round": "round-2",
-  "team": "BB-XXX",
+  "team": "BB-004",
   "queries_used": 0,
   "claims": [
     {
       "type": "feature_effect",
-      "feature": "x1",
+      "feature": "account_age_days",
       "direction": "increases",
       "strength": "strong",
-      "confidence": 0.0,
+      "confidence": 0.95,
       "evidence": {
         "query_ids": [],
-        "summary": "Replace this example claim with your own. Every claim needs evidence."
+        "summary": "Account age has a strong positive relationship with score (Spearman rho = +0.816). Controlled experiments also showed score increasing as account_age_days increased while other parameters were held fixed."
+      }
+    },
+    {
+      "type": "feature_effect",
+      "feature": "months_active",
+      "direction": "decreases",
+      "strength": "strong",
+      "confidence": 0.93,
+      "evidence": {
+        "query_ids": [],
+        "summary": "Months active has a strong negative relationship with score (Spearman rho = -0.807). Controlled experiments also showed score decreasing as months_active increased under fixed configurations."
+      }
+    },
+    {
+      "type": "feature_effect",
+      "feature": "trust_score",
+      "direction": "decreases",
+      "strength": "strong",
+      "confidence": 0.88,
+      "evidence": {
+        "query_ids": [],
+        "summary": "Trust score has a strong negative marginal relationship with score (Spearman rho = -0.732). Controlled experiments indicate the relationship is non-monotonic, with a higher-scoring region around approximately 345-355 and substantially lower scores at high trust_score values."
+      }
+    },
+    {
+      "type": "feature_effect",
+      "feature": "utilisation",
+      "direction": "increases",
+      "strength": "strong",
+      "confidence": 0.85,
+      "evidence": {
+        "query_ids": [],
+        "summary": "Utilisation has a strong positive relationship with score (Spearman rho = +0.657). Controlled observations also showed lower scores when utilisation was reduced from 1.0 to 0.95 and 0.90."
+      }
+    },
+    {
+      "type": "feature_effect",
+      "feature": "channel",
+      "direction": "increases",
+      "strength": "weak",
+      "confidence": 0.70,
+      "evidence": {
+        "query_ids": [],
+        "summary": "Channel shows a small observed score difference across categories. Controlled observations showed channel D producing the highest score among A-D, but the magnitude was much smaller than the effects observed for the stronger features."
       }
     }
   ]
