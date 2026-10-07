@@ -1,17 +1,160 @@
 {
   "round": "round-4",
-  "team": "BB-XXX",
-  "queries_used": 0,
+  "team": "BB-004",
+  "queries_used": 250,
   "claims": [
     {
-      "type": "feature_effect",
-      "feature": "x1",
-      "direction": "increases",
+      "type": "system_behavior",
+      "feature": "overall_scoring",
+      "direction": "non-linear",
       "strength": "strong",
-      "confidence": 0.0,
+      "confidence": 0.90,
       "evidence": {
         "query_ids": [],
-        "summary": "Replace this example claim with your own. Every claim needs evidence."
+        "summary": "CatBoost achieved R² 0.8666 compared with 0.7845 for Linear Regression, indicating substantial non-linear structure."
+      }
+    },
+    {
+      "type": "feature_effect",
+      "feature": "account_age_days",
+      "direction": "increases",
+      "strength": "strong",
+      "confidence": 0.90,
+      "evidence": {
+        "query_ids": [],
+        "summary": "Account age had the strongest positive observed association with score, with Spearman correlation +0.816. Controlled observations also showed score increasing as account age increased."
+      }
+    },
+    {
+      "type": "feature_effect",
+      "feature": "months_active",
+      "direction": "decreases",
+      "strength": "strong",
+      "confidence": 0.88,
+      "evidence": {
+        "query_ids": [],
+        "summary": "Months active had a strong negative association with score, with Spearman correlation -0.807. Controlled configurations also showed a negative effect."
+      }
+    },
+    {
+      "type": "feature_effect",
+      "feature": "trust_score",
+      "direction": "non-monotonic",
+      "strength": "strong",
+      "confidence": 0.91,
+      "evidence": {
+        "query_ids": [],
+        "summary": "Trust score had a negative overall Spearman association of -0.732, but controlled observations showed high scores around 345–355 and lower scores at substantially larger values, ruling out a simple higher-is-better relationship."
+      }
+    },
+    {
+      "type": "feature_effect",
+      "feature": "utilisation",
+      "direction": "increases",
+      "strength": "moderate",
+      "confidence": 0.80,
+      "evidence": {
+        "query_ids": [],
+        "summary": "Utilisation had a positive overall Spearman association of +0.657. Controlled observations also showed measurable score changes as utilisation changed."
+      }
+    },
+    {
+      "type": "feature_effect",
+      "feature": "channel",
+      "direction": "context-dependent",
+      "strength": "weak",
+      "confidence": 0.65,
+      "evidence": {
+        "query_ids": [],
+        "summary": "Channel affected observed scores, with channel D producing some of the highest observed scores, but its effect was weaker than the main numerical features."
+      }
+    },
+    {
+      "type": "model_performance",
+      "feature": "all_features",
+      "direction": "predictive",
+      "strength": "strong",
+      "confidence": 0.95,
+      "evidence": {
+        "query_ids": [],
+        "summary": "CatBoost achieved R² 0.8666, MAE 0.0579, and RMSE 0.1030, making it the strongest tested model for score reconstruction."
+      }
+    },
+    {
+      "type": "decision_boundary",
+      "feature": "all_features",
+      "direction": "strongly_predictive",
+      "strength": "strong",
+      "confidence": 0.95,
+      "evidence": {
+        "query_ids": [],
+        "summary": "Logistic Regression with StandardScaler achieved ROC-AUC 0.9772 and Average Precision 0.9568, showing that the observed features contain strong information about the hidden decision boundary."
+      }
+    },
+    {
+      "type": "data_distribution",
+      "feature": "decision",
+      "direction": "diverse",
+      "strength": "moderate",
+      "confidence": 0.90,
+      "evidence": {
+        "query_ids": [],
+        "summary": "The final dataset contains 207 APPROVE and 73 DECLINE observations, providing substantially more decision diversity than an extremely approval-skewed query strategy."
+      }
+    },
+    {
+      "type": "methodology",
+      "feature": "SMOTE",
+      "direction": "training_only",
+      "strength": "strong",
+      "confidence": 1.0,
+      "evidence": {
+        "query_ids": [],
+        "summary": "SMOTE was applied only after the train/test split to the training partition. The test set remained untouched."
+      }
+    },
+    {
+      "type": "ruled_out",
+      "feature": "single_feature_rule",
+      "direction": "rejected",
+      "strength": "strong",
+      "confidence": 0.90,
+      "evidence": {
+        "query_ids": [],
+        "summary": "No individual feature explained the complete observed score or decision behavior."
+      }
+    },
+    {
+      "type": "ruled_out",
+      "feature": "linear_scoring_function",
+      "direction": "rejected",
+      "strength": "strong",
+      "confidence": 0.92,
+      "evidence": {
+        "query_ids": [],
+        "summary": "Linear Regression achieved R² 0.7845, substantially below CatBoost at R² 0.8666, indicating non-linear structure."
+      }
+    },
+    {
+      "type": "uncertainty",
+      "feature": "hidden_formula",
+      "direction": "unknown",
+      "strength": "unknown",
+      "confidence": 0.95,
+      "evidence": {
+        "query_ids": [],
+        "summary": "The exact mathematical scoring formula has not been recovered despite strong predictive reconstruction."
+      }
+    },
+    {
+      "type": "uncertainty",
+      "feature": "decision_threshold",
+      "direction": "unknown",
+      "strength": "unknown",
+      "confidence": 0.95,
+      "evidence": {
+        "query_ids": [],
+        "summary": "The exact hidden rule or threshold converting the score into APPROVE or DECLINE has not been established."
       }
     }
   ]
