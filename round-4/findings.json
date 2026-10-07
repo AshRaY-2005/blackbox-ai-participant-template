@@ -11,7 +11,7 @@
       "confidence": 0.90,
       "evidence": {
         "query_ids": [],
-        "summary": "CatBoost achieved R² 0.8666 compared with 0.7845 for Linear Regression, indicating substantial non-linear structure."
+        "summary": "CatBoost achieved R² 0.8666, indicating substantial non-linear structure."
       }
     },
     {
